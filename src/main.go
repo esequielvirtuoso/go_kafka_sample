@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 
-	kafka "github.com/esequielvirtuoso/go_kafka_sample/internal/infrastructure/kafka_client"
+	"github.com/esequielvirtuoso/go_kafka_sample/src/internal/infrastructure/kafka"
 	env "github.com/esequielvirtuoso/go_utils_lib/envs"
 )
 
@@ -20,7 +20,7 @@ func main() {
 
 	kafkaClient := kafka.NewClient(getFirstBroker(), getSecondBroker())
 
-	go kafkaClient.produce("Kafka producer first message", 1, "topic_test", ctx)
+	go kafkaClient.Produce("Kafka producer first message", "1", "topic_test", ctx)
 	kafkaClient.Consume("topic_test", "my-group", ctx)
 }
 
