@@ -8,10 +8,10 @@ import (
 )
 
 const (
-	envFirstBroker          = "BROKER_1"
-	envDefaultFirstBrocker  = "localhost:29092"
-	envSecondBroker         = "BROKER_2"
-	envDefaultSecondBrocker = "localhost:39092"
+	envFirstBroker         = "BROKER_1"
+	envDefaultFirstBroker  = "localhost:29092"
+	envSecondBroker        = "BROKER_2"
+	envDefaultSecondBroker = "localhost:39092"
 )
 
 func main() {
@@ -20,14 +20,27 @@ func main() {
 
 	kafkaClient := kafka.NewClient(getFirstBroker(), getSecondBroker())
 
-	go kafkaClient.Produce("Kafka producer first message", "1", "topic_test", ctx)
-	kafkaClient.Consume("topic_test", "my-group", ctx)
+	go produceLoop(ctx, kafkaClient)
+
+	consumeLoop(ctx, kafkaClient)
+}
+
+func produceLoop(ctx context.Context, client kafka.KafkaClientInterface) {
+	for {
+		client.Produce("Kafka producer first message", "1", "topic_test", ctx)
+	}
+}
+
+func consumeLoop(ctx context.Context, client kafka.KafkaClientInterface) {
+	for {
+		client.Consume("topic_test", "consumer_group_test", ctx)
+	}
 }
 
 func getFirstBroker() string {
-	return env.GetString(envFirstBroker, envDefaultFirstBrocker)
+	return env.GetString(envFirstBroker, envDefaultFirstBroker)
 }
 
 func getSecondBroker() string {
-	return env.GetString(envSecondBroker, envDefaultSecondBrocker)
+	return env.GetString(envSecondBroker, envDefaultSecondBroker)
 }

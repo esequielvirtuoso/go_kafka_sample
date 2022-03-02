@@ -3,6 +3,7 @@ package kafka
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/esequielvirtuoso/go_utils_lib/logger"
 	kafka "github.com/segmentio/kafka-go"
@@ -30,6 +31,11 @@ func (c *kafkaClient) Produce(message string, partition string, topic string, ct
 	writer := kafka.NewWriter(kafka.WriterConfig{
 		Brokers: []string{c.firstBrokerAddress, c.secondBrokerAddress},
 		Topic:   topic,
+		// wait until we get 10 messages before writing
+		BatchSize: 10,
+		// no matter what happens, write all pending messages
+		// every 2 seconds
+		BatchTimeout: 2 * time.Second,
 	})
 
 	// each kafka message has a key and value. The key is used
@@ -52,9 +58,18 @@ func (c *kafkaClient) Consume(topic string, groupID string, ctx context.Context)
 	// the groupID identifies the consumer and prevents
 	// it from receiving duplicate messages
 	reader := kafka.NewReader(kafka.ReaderConfig{
-		Brokers: []string{c.firstBrokerAddress, c.secondBrokerAddress},
-		Topic:   topic,
-		GroupID: groupID,
+		Brokers:  []string{c.firstBrokerAddress, c.secondBrokerAddress},
+		Topic:    topic,
+		GroupID:  groupID,
+		MinBytes: 5,
+		// the kafka library requires you to set the MaxBytes
+		// in case the MinBytes are set
+		MaxBytes: 1e6,
+		// wait for at most 3 seconds before receiving new data
+		MaxWait: 10 * time.Second,
+		// this will start consuming messages from the earliest available
+		StartOffset: kafka.FirstOffset,
+		// if you set it to `kafka.LastOffset` it will only consume new messages
 	})
 
 	for {
